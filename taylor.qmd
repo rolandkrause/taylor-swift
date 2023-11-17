@@ -1,0 +1,93 @@
+---
+title: "Taylor Swift songs"
+format: html
+editor: visual
+warnings: false
+---
+
+```{r setup}
+library(tidyverse)
+library(taylor)
+library(GGally)
+```
+
+## Titles in Albums
+
+```{r}
+taylor_album_songs |> 
+  ggplot(aes(y = fct_rev(fct_infreq(album_name)))) +
+  geom_bar()
+```
+
+## Album length by time
+
+```{r}
+taylor_album_songs |> 
+  group_by(album_name, album_release) |> 
+  summarize(n_songs = n()) |> 
+  relocate(n_songs) |> 
+  ggplot() +
+  aes(x = album_release, y = n_songs) +
+  geom_point()
+
+```
+
+```{r}
+taylor_album_songs |> 
+  mutate(album_year = paste0(album_name, " (", lubridate::year(album_release), ")")) |> 
+  relocate(album_year) |> 
+  group_by(album_year, album_release) |> 
+  summarize(n_songs = n(),
+        
+         album_length = sum(duration_ms, na.rm = TRUE)) |> 
+  ungroup() |> 
+  arrange(album_release) |> 
+  ggplot() +
+  aes(y = fct_inorder(album_year), x = n_songs) +
+  geom_col() +
+  geom_text(aes(label = album_length), color = "red") 
+```
+
+
+```{r}
+
+mus2hms <- function(x){
+  format(hms::as_hms(sum(round(duration_ms/1000, 0), na.rm = TRUE)), "%H:%M:%s")
+}
+
+taylor_album_songs |> 
+  mutate(album_year = paste0(album_name, " (", lubridate::year(album_release), ")")) |> 
+  mutate(album_duration = format(hms::as_hms(sum(round(duration_ms/1000, 0), na.rm = TRUE)), "%H:%M:%s")
+, .by = album_name) |> 
+  arrange(album_release) |> 
+  ggplot() +
+  aes(y = fct_inorder(album_year), label = album_duration) +
+  geom_bar(aes(fill = album_name)) +
+  geom_text( stat='count', color = "white", hjust = 1.2) +
+  scale_fill_albums() +
+  theme(legend.position = "none") +
+  labs(title = "Taylor Swift's albums",
+       y = NULL,
+       x = NULL)
+```
+
+## Relation of dancebality and energy, loudness
+
+```{r}
+taylor_album_songs |> 
+  ggplot(aes(x = loudness, y = energy)) +
+  geom_point(aes(color = album_name,  size = danceability)) +
+  geom_smooth(method = "lm") +
+  scale_color_taylor_d()
+```
+## Collinearity
+```{r}
+#| warning: false
+#| message: false
+taylor_album_songs |> 
+  select(where(is.numeric)) |> 
+  select(-mode, -track_number, -time_signature) |> 
+  select(1:9) |> 
+GGally::ggpairs()
+```
+
