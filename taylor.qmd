@@ -17,8 +17,9 @@ library(taylor)
 library(GGally)
 library(cowplot)
 library(ggbeeswarm)
-theme_set(theme_minimal( base_size = 20)    ) 
-preset <-  theme(panel.background = element_rect("white"))
+library(ggdark)
+theme_set(dark_theme_minimal( base_size = 20)    ) 
+preset <-  theme(panel.background = element_rect("black"))
   
   #fill, colour, size,linetype, color))
 ```
@@ -28,6 +29,8 @@ preset <-  theme(panel.background = element_rect("white"))
 Taylor package - CRAN
 
 [Blog post on medium](https://medium.com/@simranvatsa5/taylor-f656e2a09cc3)
+
+![](https://taylor.wjakethompson.com/reference/figures/logo.png){.absolute top=10 right=10 width="150" height="150"}
 
 ## Fans and critics agree{.backdrop1}
 
@@ -196,5 +199,5 @@ taylor_album_songs |>
 
 * Repository https://github.com/rolandkrause/taylor-swift
 
-# Thank you for your attention
+# Thank you for your attention!
 
