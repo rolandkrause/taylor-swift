@@ -1,6 +1,12 @@
 ---
-title: "Taylor Swift songs"
-format: html
+title: "Rooting for the antihero"
+subtitle: "Data visualisation using the `taylor` package"
+author: "Roland Krause"
+date: "1989-11-08"
+format: 
+  revealjs:
+    theme: [night, taylor.scss]
+    transition: concave
 editor: visual
 warnings: false
 ---
@@ -9,85 +15,178 @@ warnings: false
 library(tidyverse)
 library(taylor)
 library(GGally)
+library(cowplot)
+library(ggbeeswarm)
+theme_set(theme_minimal( base_size = 20)    ) 
+preset <-  theme(panel.background = element_rect("white"))
+  
+  #fill, colour, size,linetype, color))
 ```
 
-## Titles in Albums
+## Sources
+
+Taylor package - CRAN
+
+[Blog post on medium](https://medium.com/@simranvatsa5/taylor-f656e2a09cc3)
+
+## Fans and critics agree{.backdrop1}
 
 ```{r}
-taylor_album_songs |> 
-  ggplot(aes(y = fct_rev(fct_infreq(album_name)))) +
-  geom_bar()
-```
-
-## Album length by time
-
-```{r}
-taylor_album_songs |> 
-  group_by(album_name, album_release) |> 
-  summarize(n_songs = n()) |> 
-  relocate(n_songs) |> 
+standard <-
+  taylor_albums |>
+  drop_na() |>
   ggplot() +
-  aes(x = album_release, y = n_songs) +
-  geom_point()
+  geom_col(color = "white")  +
+  scale_fill_albums() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+ 
+  theme(legend.position = "none") +
+  labs(x ="") +
+  preset
 
+standard +
+  aes(x = user_score,
+      y = album_name,
+      fill = album_name) +
+  geom_text(aes(label = album_name),
+            color = "white",
+            hjust = 1.1) +
+  labs(title = "User score",
+       y = "", x = "") ->  a1
 ```
+
+```{r}
+standard +
+  aes(x = metacritic_score,
+      #y = fct_rev(fct_inorder(album_name, as.character(album_release))),
+      y = album_name,
+      fill = album_name) +
+  theme(legend.position = "none") +
+  labs(title = "Metacritic score",
+       y = "", x = "") +
+  scale_x_reverse()  -> a2
+```
+
+
+```{r}
+#plot_grid(a1,a2) 
+library(patchwork)
+a1+a2
+```
+
+
+
+## Time with Taylor  {.backdrop2}
 
 ```{r}
 taylor_album_songs |> 
   mutate(album_year = paste0(album_name, " (", lubridate::year(album_release), ")")) |> 
   relocate(album_year) |> 
-  group_by(album_year, album_release) |> 
+  group_by(album_name, album_year, album_release) |> 
   summarize(n_songs = n(),
         
-         album_length = sum(duration_ms, na.rm = TRUE)) |> 
+         album_length = format(hms::as_hms(round(sum(duration_ms/1000, na.rm = TRUE)))), "%H:%M:%s")  |> 
   ungroup() |> 
   arrange(album_release) |> 
   ggplot() +
   aes(y = fct_inorder(album_year), x = n_songs) +
-  geom_col() +
-  geom_text(aes(label = album_length), color = "red") 
+  geom_col(aes(fill=album_name)) +
+  geom_text(aes(label = paste(album_year, album_length)), color = "white", hjust = 
+            1.2) +
+    scale_fill_albums() +
+  theme(legend.position = "none",
+        axis.text.y = element_blank()) +
+    labs(caption = "Earlier albums were shorter",
+       y = NULL,
+       x = "Number of songs") -> album_lengths
 ```
 
 
 ```{r}
-
+scale_factor <- 12
 mus2hms <- function(x){
-  format(hms::as_hms(sum(round(duration_ms/1000, 0), na.rm = TRUE)), "%H:%M:%s")
+  hms::as_hms(sum(round(duration_ms/1000, 0), na.rm = TRUE))
 }
 
-taylor_album_songs |> 
-  mutate(album_year = paste0(album_name, " (", lubridate::year(album_release), ")")) |> 
-  mutate(album_duration = format(hms::as_hms(sum(round(duration_ms/1000, 0), na.rm = TRUE)), "%H:%M:%s")
-, .by = album_name) |> 
+taylor_album_songs |>
+  filter(!is.na(duration_ms )) |> 
+  mutate(album_year = paste0(album_name, " (", lubridate::year(album_release), ")")) |>
+  mutate(
+    album_duration = hms::as_hms(sum(
+      round(duration_ms / 1000, 0), na.rm = TRUE)), .by = album_name) |>
+  mutate(song_duration = hms::as_hms(round(duration_ms / 1000, 0)  )) |> 
+  mutate(album_display_length = album_duration/200) |> 
   arrange(album_release) |> 
-  ggplot() +
-  aes(y = fct_inorder(album_year), label = album_duration) +
-  geom_bar(aes(fill = album_name)) +
-  geom_text( stat='count', color = "white", hjust = 1.2) +
-  scale_fill_albums() +
-  theme(legend.position = "none") +
-  labs(title = "Taylor Swift's albums",
+  relocate(contains("duration"))-> album_input 
+
+  ggplot(album_input) +
+#  scale_x_continuous(sec.axis = sec_axis()) +
+   geom_beeswarm(aes(x =song_duration, y =  fct_inorder(album_year), color = album_name),
+              alpha = 0.6,
+              width = 0.2, height = 0.2, size = 3) +
+     scale_color_albums() +
+  theme(legend.position = "none",
+        axis.text.y = element_blank()) +
+    #scale_x_date(date_labels = "%b %d")
+  # scale_x_discrete(guide = 
+  #    guide_axis(check.overlap = TRUE)) +
+  #   guide_axis(n.dodge=3)) +
+    scale_x_continuous(trans = "sqrt") +
+    scale_x_time() + #"%H:%M:%s"+
+ 
+     labs(caption = "Suitable for radio",
        y = NULL,
-       x = NULL)
+       x = "Song length (min)") -> songs_length
 ```
 
-## Relation of dancebality and energy, loudness
+```{r}
+album_lengths | songs_length
+```
+
+## Hit keys
 
 ```{r}
+taylor_album_songs |> 
+ # filter(!is.na(single_release)) |> 
+  ggplot() +
+  aes(y = key_mode, x = tempo ) +
+  geom_boxplot() +
+  ggbeeswarm::geom_quasirandom(aes( color = album_name), alpha=0.5)+ 
+  scale_color_albums()
+```
+
+
+## Dancing all over the place{.backdrop4}
+
+```{r}
+#| fig.height: 8
+#| fig.width: 12
 taylor_album_songs |> 
   ggplot(aes(x = loudness, y = energy)) +
-  geom_point(aes(color = album_name,  size = danceability)) +
-  geom_smooth(method = "lm") +
-  scale_color_taylor_d()
+  geom_point(aes(color =  album_name,   #danceability,
+                 size = danceability), 
+             stroke = 0.2, alpha = 0.8) +
+  scale_color_albums()+
+  # geom_text(data = \(x) filter(x, energy < .25,
+  #                              loudness > -12),
+  #           aes(label = track_name),
+  #           nudge_y = -0.02,  color = "pink") +
+  geom_text(data = \(x) filter(x, danceability > 0.8),
+            aes(label = track_name, color = album_name),
+            nudge_y = -0.02, colour = "pink", size = 8) +
+  geom_smooth(method = "lm", color = "pink", se =FALSE) +
+  theme(panel.background = element_rect("black"),
+        legend.position = "left",
+        legend.text = element_text(size =12),
+        #legend.box.background = element_rect(colour = "pink")
+        ) +
+  labs(x = "Loudness", 
+       y = "Energy",
+       size = "Danceable?",
+       color = "Album name",
+       caption = "The most danceable songs are found across the energy-loudness spectrum. ")
 ```
-## Collinearity
-```{r}
-#| warning: false
-#| message: false
-taylor_album_songs |> 
-  select(where(is.numeric)) |> 
-  select(-mode, -track_number, -time_signature) |> 
-  select(1:9) |> 
-GGally::ggpairs()
-```
+
+# Thank you for your attention
 

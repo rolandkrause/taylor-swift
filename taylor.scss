@@ -1,0 +1,28 @@
+/*-- scss:defaults --*/
+
+$body-bg: #191919;
+$body-color: #fff;
+$link-color: #42affa;
+
+/*-- scss:rules --*/
+
+.reveal .slide blockquote {
+  border-left: 3px solid $text-muted;
+  padding-left: 0.5em;
+}
+
+.backdrop1 {
+  background-image: linear-gradient(to right, #0f0309, #2e202b, #4b394f, #645679, #7877a7, #798ec4, #73a6df, #69bff8, #52cffe, #41dfff, #46eefa, #5ffbf1);
+}
+
+.backdrop2{
+  background-image: linear-gradient(to left, #0f0309, #2e202b, #4b394f, #645679, #7877a7, #798ec4, #73a6df, #69bff8, #52cffe, #41dfff, #46eefa, #5ffbf1);
+}
+
+.backdrop3{
+  background-image: linear-gradient(to right, #d16ba5, #a5619a, #7c5689, #584972, #3a3b58, #393e59, #38405a, #37435b, #4a5b7c, #5d739e, #718dc2, #86a8e7);
+}
+
+.backdrop4{
+  background-image: linear-gradient(to right, #86a8e7, #718dc2, #5d739e, #4a5b7c, #37435b, #38405a, #393e59, #3a3b58, #584972, #7c5689, #a5619a, #d16ba5);
+}
