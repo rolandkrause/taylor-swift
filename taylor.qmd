@@ -172,7 +172,7 @@ taylor_album_songs |>
   #                              loudness > -12),
   #           aes(label = track_name),
   #           nudge_y = -0.02,  color = "pink") +
-  geom_text(data = \(x) filter(x, danceability > 0.8),
+  geom_text(data = \(x) filter(x, danceability > 0.78),
             aes(label = track_name, color = album_name),
             nudge_y = -0.02, colour = "pink", size = 8) +
   geom_smooth(method = "lm", color = "pink", se =FALSE) +
@@ -185,8 +185,14 @@ taylor_album_songs |>
        y = "Energy",
        size = "Danceable?",
        color = "Album name",
-       caption = "The most danceable songs are found across the energy-loudness spectrum. ")
+       caption = "The most danceable songs are found across the energy-loudness spectrum. ") +
+  guides(size = guide_legend(override.aes = list(colour = "pink")),
+         fill = guide_legend(override.aes = list(size = 30) ))
 ```
+
+# Todo
+
+* Clean up different versions of albums and songs
 
 # Thank you for your attention
 
