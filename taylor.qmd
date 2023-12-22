@@ -194,5 +194,7 @@ taylor_album_songs |>
 
 * Clean up different versions of albums and songs
 
+* Repository https://github.com/rolandkrause/taylor-swift
+
 # Thank you for your attention
 
